@@ -49,7 +49,7 @@ def main():
   time.sleep(2)
  check('All-three inference finished',r['status']=='done')
  check('All three actual model outputs',len(r['models'])==3 and all('error' not in x for x in r['models']))
- check('Hybrid crack verifier used',next(x for x in r['models'] if x['key']=='crack')['verification']['version']=='hybrid-review-v2')
+ check('YOLO crack detector used',next(x for x in r['models'] if x['key']=='crack')['engine']=='crack_n')
  check('Result written to PostgreSQL history',any(h['frame_id']==job['id'] for h in get('/api/history?tag=AMS-PS-004')))
  check('Rendered result downloadable',call(r['overlay']).headers['Content-Type']=='image/jpeg')
  (ROOT/'outputs/verification.json').write_text(json.dumps({'checks':checks,'job':r},ensure_ascii=False,indent=2),encoding='utf-8')

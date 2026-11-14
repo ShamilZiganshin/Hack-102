@@ -62,18 +62,18 @@ class Worker:
    if 'error' in r:raise RuntimeError(r['error'])
    return r
 def warm(key):WORKERS[key]=Worker(key)
-def crack_hybrid(image,out,job):
+def crack_yolo(image,out,job):
  boundary='----Kiber'+uuid.uuid4().hex
- body=(f'--{boundary}\r\nContent-Disposition: form-data; name="engine"\r\n\r\nhybrid\r\n--{boundary}\r\nContent-Disposition: form-data; name="image"; filename="frame.jpg"\r\nContent-Type: image/jpeg\r\n\r\n').encode()+image.read_bytes()+f'\r\n--{boundary}--\r\n'.encode()
+ body=(f'--{boundary}\r\nContent-Disposition: form-data; name="engine"\r\n\r\ncrack_n\r\n--{boundary}\r\nContent-Disposition: form-data; name="image"; filename="frame.jpg"\r\nContent-Type: image/jpeg\r\n\r\n').encode()+image.read_bytes()+f'\r\n--{boundary}--\r\n'.encode()
  opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
  req=urllib.request.Request('http://127.0.0.1:8767/api/jobs',data=body,headers={'Content-Type':'multipart/form-data; boundary='+boundary})
  remote=json.load(opener.open(req,timeout=15));job['crack_job']=remote['id'];start=time.perf_counter()
  while time.perf_counter()-start<1200:
-  r=json.load(opener.open('http://127.0.0.1:8767/api/jobs/'+remote['id'],timeout=15));job['crack_progress']={k:r.get(k) for k in ('status','tokens','reviewed','total','elapsed')}
+  r=json.load(opener.open('http://127.0.0.1:8767/api/jobs/'+remote['id'],timeout=15));job['crack_progress']={k:r.get(k) for k in ('status','elapsed')}
   if r['status']=='error':raise RuntimeError(r['error'])
   if r['status']=='completed':
    mask=opener.open('http://127.0.0.1:8767/files/'+remote['id']+'/mask.png',timeout=15).read();(out/'crack.png').write_bytes(mask)
-   report=r['result'];return {'key':'crack','model':report['model'],'seconds':report['seconds'],'percent':round(report['mask_percent_of_image'],3),'verification':report['verification'],'remote_job':remote['id']}
+   report=r['result'];return {'key':'crack','model':report['model'],'seconds':report['seconds'],'percent':round(report['mask_percent_of_image'],3),'engine':report['key'],'remote_job':remote['id']}
   time.sleep(1)
  raise TimeoutError('Проверка трещин превысила 20 минут; задание остаётся в InspectLab.')
 def analyze(id,image,tag,mode,captured,cracks):
@@ -86,8 +86,8 @@ def analyze(id,image,tag,mode,captured,cracks):
    except Exception as e:results.append({'key':k,'error':str(e)})
   job.update(models=results,stage='surface_done')
   if cracks:
-   job['stage']='crack_hybrid'
-   try:results.append(crack_hybrid(image,out,job))
+   job['stage']='crack_yolo'
+   try:results.append(crack_yolo(image,out,job))
    except Exception as e:results.append({'key':'crack','error':str(e)})
   rgb=np.array(Image.open(image).convert('RGB'));blend=rgb.copy()
   for r in results:
@@ -97,9 +97,10 @@ def analyze(id,image,tag,mode,captured,cracks):
     color=np.array({'rust':[255,100,45],'oil':[49,211,225],'crack':[235,65,175]}[r['key']])
     blend[mask]=np.round(rgb[mask]*.55+color*.45).astype('uint8')
   Image.fromarray(blend).save(out/'overlay.jpg',quality=92)
-  job.update(status='done',models=results,seconds=round(time.perf_counter()-t,2),finished_at=now(),overlay='/results/'+id+'/overlay.jpg',original='/results/'+id+'/frame.jpg')
+  finished=dict(job,status='done',models=results,seconds=round(time.perf_counter()-t,2),finished_at=now(),overlay='/results/'+id+'/overlay.jpg',original='/results/'+id+'/frame.jpg')
   with db() as c:
-   c.execute("INSERT INTO inspections(equipment_id,frame_id,observations,decision,notes) SELECT id,%s,%s,'pending',%s FROM equipment WHERE tag=%s",(id,Jsonb(job),'Автоматическая гипотеза; требуется осмотр. Кадр с телефона / загруженное фото.',tag))
+   c.execute("INSERT INTO inspections(equipment_id,frame_id,observations,decision,notes) SELECT id,%s,%s,'pending',%s FROM equipment WHERE tag=%s",(id,Jsonb(finished),'Автоматическая гипотеза; требуется осмотр. Кадр с телефона / загруженное фото.',tag))
+  job.update(finished)
  except Exception as e:job.update(status='error',error=str(e))
  finally:
   (out/'result.json').write_text(json.dumps(job,ensure_ascii=False,indent=2),encoding='utf-8');LOCK.release()

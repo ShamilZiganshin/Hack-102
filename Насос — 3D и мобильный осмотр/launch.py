@@ -19,5 +19,5 @@ if not running:
 try:opener.open('http://127.0.0.1:8767/api/health',timeout=3)
 except Exception:
  crack=ROOT.parent/'детекция поломок'
- subprocess.Popen(['powershell.exe','-NoProfile','-File',str(crack/'launch.ps1')],cwd=crack,creationflags=flags,stdout=open(ROOT/'outputs/crack-launch.log','ab'),stderr=subprocess.STDOUT)
+ subprocess.Popen([str(crack/'.venv/Scripts/python.exe'),str(crack/'app.py')],cwd=crack,creationflags=flags,stdout=open(ROOT/'outputs/crack-launch.log','ab'),stderr=subprocess.STDOUT)
 webbrowser.open((ROOT/'Насос — свободный 3D.html').as_uri());webbrowser.open((ROOT/'Подключить телефон.html').as_uri())

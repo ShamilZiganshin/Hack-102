@@ -9,8 +9,6 @@ import sys
 ROOT = Path(__file__).resolve().parent
 APP = ROOT / "Насос — 3D и мобильный осмотр"
 PG = Path(os.environ["ProgramFiles"]) / "PostgreSQL/18/bin"
-CRACK = ROOT / "детекция поломок"
-OLLAMA = Path(os.environ["LOCALAPPDATA"]) / "Programs/Ollama/ollama.exe"
 
 
 def run(*args, **kwargs):
@@ -71,8 +69,8 @@ def database(python):
 
 
 def main():
-    if not (PG / "initdb.exe").is_file() or not OLLAMA.is_file():
-        sys.exit("Установите PostgreSQL 18 и Ollama для Windows (см. README.md).")
+    if not (PG / "initdb.exe").is_file():
+        sys.exit("Установите PostgreSQL 18 для Windows (см. README.md).")
     run("git", "lfs", "pull", cwd=ROOT)
     for folder in ROOT.iterdir():
         if folder.is_dir() and ((folder / "START.bat").exists() or folder.name.startswith("детекция")):
@@ -83,28 +81,6 @@ def main():
         environment("детекция поломок")
         database(python)
         run(python, APP / "setup.py")
-        env = dict(os.environ, OLLAMA_HOST="127.0.0.1:11435", OLLAMA_MODELS=str(CRACK / "models"))
-        import urllib.request
-        import time
-        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-        def tags():
-            with opener.open("http://127.0.0.1:11435/api/tags", timeout=2) as response:
-                return [m["name"] for m in json.load(response)["models"]]
-        try:
-            models = tags()
-        except OSError:
-            subprocess.Popen([OLLAMA, "serve"], env=env, creationflags=subprocess.CREATE_NO_WINDOW)
-            for attempt in range(30):
-                time.sleep(1)
-                try:
-                    models = tags()
-                    break
-                except OSError:
-                    if attempt == 29:
-                        raise
-        if "qwen3-vl:4b-instruct" not in models:
-            run(OLLAMA, "pull", "qwen3-vl:4b-instruct", env=env)
-        run("powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", CRACK / "launch.ps1")
         run(python, APP / "launch.py")
 
 

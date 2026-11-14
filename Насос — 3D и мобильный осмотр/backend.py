@@ -227,6 +227,8 @@ class Handler(SimpleHTTPRequestHandler):
   except (ValueError,KeyError,Image.UnidentifiedImageError,Image.DecompressionBombError) as e:self.send({'error':str(e)},status=400)
   except Exception as e:self.send({'error':str(e)},status=500)
 def main():
+ from pump_passports import install
+ install(db)
  field_auth.setup(db,OUT)
  with db() as c:
   c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS vibration_spectrum jsonb")

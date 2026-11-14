@@ -17,16 +17,22 @@ from urllib.parse import urlsplit
 ROOT = Path(__file__).resolve().parent
 APP = ROOT / "Насос — 3D и мобильный осмотр"
 STATE = ROOT / "radmin" / "private"
-HTTP = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+class RelayRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self,*args):return None
+
+HTTP = urllib.request.build_opener(urllib.request.ProxyHandler({}), RelayRedirect())
 POST_PATHS = {"/api/qr", "/api/ar-frame", "/api/analyze"}
-GET_PATHS = {"/mobile.html", "/ar.html", "/viewer.html", "/examples.html",
+GET_PATHS = {"/admin","/brigadir","/worker","/login","/field.js","/mobile.html", "/ar.html", "/viewer.html", "/examples.html",
              "/mobile.js", "/mobile.css", "/camera-view.css", "/camera-view.js",
              "/alerts.js", "/trends.js", "/api/health", "/api/equipment",
              "/api/telemetry", "/api/passport", "/api/history", "/api/trends"}
 
 class Gateway(BaseHTTPRequestHandler):
-    def reply(self, status, mime, body):
+    def reply(self, status, mime, body, upstream=None):
         self.send_response(status)
+        if upstream:
+            for name in ("Set-Cookie","Location"):
+                if upstream.get(name): self.send_header(name,upstream[name])
         self.send_header("Content-Type", mime)
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
@@ -40,15 +46,16 @@ class Gateway(BaseHTTPRequestHandler):
         if path == "/kiber102-ca.cer" and body is None:
             return self.reply(200, "application/pkix-cert", self.server.ca.read_bytes())
         if body is None and path not in GET_PATHS and not any(
-                path.startswith(prefix) for prefix in ("/assets/", "/results/", "/api/document/", "/api/jobs/")):
+                path.startswith(prefix) for prefix in ("/api/field/","/assets/", "/results/", "/api/document/", "/api/jobs/")):
             return self.send_error(404)
-        headers = {k:self.headers[k] for k in ("Accept", "Content-Type", "X-Captured-At") if k in self.headers}
+        headers = {k:self.headers[k] for k in ("Accept", "Content-Type", "X-Captured-At", "Cookie", "X-Field-Request") if k in self.headers}
+        if isinstance(self.connection, ssl.SSLSocket):headers["X-Forwarded-Proto"]="https"
         req = urllib.request.Request(self.server.peer + self.path, data=body, headers=headers)
         try:
             with HTTP.open(req, timeout=90) as res:
-                self.reply(res.status, res.headers.get("Content-Type","application/octet-stream"), res.read())
+                self.reply(res.status, res.headers.get("Content-Type","application/octet-stream"), res.read(),res.headers)
         except urllib.error.HTTPError as exc:
-            self.reply(exc.code, exc.headers.get("Content-Type","application/json"), exc.read())
+            self.reply(exc.code, exc.headers.get("Content-Type","application/json"), exc.read(),exc.headers)
         except (urllib.error.URLError,TimeoutError):
             self.reply(503,"application/json",json.dumps({"error":"RTX недоступен через Radmin VPN"}).encode())
 
@@ -56,7 +63,7 @@ class Gateway(BaseHTTPRequestHandler):
         self.relay()
 
     def do_POST(self):
-        if urlsplit(self.path).path not in POST_PATHS:
+        if urlsplit(self.path).path not in POST_PATHS and not urlsplit(self.path).path.startswith('/api/field/'):
             return self.send_error(404)
         try:
             size = int(self.headers.get("Content-Length", "0"))

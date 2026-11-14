@@ -6,6 +6,7 @@ from urllib.parse import urlparse,parse_qs,unquote
 from concurrent.futures import ThreadPoolExecutor
 ROOT=Path(__file__).resolve().parent
 sys.path.insert(0,str(ROOT/'vendor'))
+import field_auth
 import psycopg
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
@@ -124,12 +125,27 @@ class Handler(SimpleHTTPRequestHandler):
  def log_message(self,fmt,*args):print(now(),fmt%args,flush=True)
  def send(self,b,ctype='application/json; charset=utf-8',status=200):
   if not isinstance(b,bytes):b=json.dumps(b,ensure_ascii=False,default=str).encode('utf-8')
-  self.send_response(status);self.send_header('Content-Type',ctype);self.send_header('Content-Length',str(len(b)));self.send_header('Cache-Control','no-store');self.send_header('X-Content-Type-Options','nosniff');self.end_headers();self.wfile.write(b)
+  self.send_response(status)
+  if getattr(self,'session_cookie',None):
+   self.send_header('Set-Cookie',self.session_cookie);self.session_cookie=None
+  self.send_header('Content-Type',ctype);self.send_header('Content-Length',str(len(b)));self.send_header('Cache-Control','no-store');self.send_header('X-Content-Type-Options','nosniff');self.end_headers();self.wfile.write(b)
  def do_GET(self):
   try:self.get()
+  except field_auth.Rejected as e:self.send({'error':str(e)},status=e.status)
   except Exception as e:self.send({'error':str(e)},status=500)
  def get(self):
   u=urlparse(self.path);path=unquote(u.path);q=parse_qs(u.query)
+  if path.startswith('/api/field/'):
+   value=field_auth.dispatch(db,self,path,q)
+   return self.send(value,'image/jpeg') if isinstance(value,bytes) else self.send(value)
+  if path in ('/worker','/brigadir','/admin','/login','/mobile.html','/','/ar.html'):
+   with db() as c:u=field_auth.identity(c,self)
+   if path!='/login' and (not u or (path in ('/admin','/worker','/brigadir') and path!='/'+u['role']) or (path in ('/mobile.html','/','/ar.html') and u['role']=='brigadir')):
+    self.send_response(303);self.send_header('Location','/'+u['role'] if u else '/login');self.send_header('Cache-Control','no-store');self.end_headers();return
+   if path in ('/worker','/brigadir','/admin','/login'):
+    return self.send((PUBLIC/'field.html').read_bytes(),'text/html; charset=utf-8')
+  if (path.startswith('/api/') and path!='/api/health') or path.startswith('/results/'):
+   with db() as c:field_auth.require(c,self)
   if path=='/api/health':return self.send({'ok':True,'models':{k:{'ready':w.ready,'error':w.error} for k,w in WORKERS.items()}})
   if path=='/api/trends':return self.send(demo_trends.history(db,q.get('tag',[''])[0],q.get('demo',['0'])[0]=='1'))
   if path=='/api/equipment':
@@ -158,6 +174,10 @@ class Handler(SimpleHTTPRequestHandler):
    size=int(self.headers.get('Content-Length','0'))
    if not 0<size<=12_000_000:return self.send({'error':'Файл должен быть меньше 12 МБ'},status=413)
    body=self.rfile.read(size);u=urlparse(self.path);q=parse_qs(u.query)
+   if u.path.startswith('/api/field/'):
+    return self.send(field_auth.dispatch(db,self,u.path,q,body))
+   if u.path!='/api/measurements':
+    with db() as c:field_auth.require(c,self,('worker','admin'))
    if u.path=='/api/measurements':
     if not secrets.compare_digest(self.headers.get('X-Sensor-Key',''),CONFIG['sensor_key']):return self.send({'error':'Нужен отдельный ключ датчиков'},status=403)
     v=json.loads(body);tag=v['tag'];stamp=datetime.fromisoformat(v['measured_at'].replace('Z','+00:00'))
@@ -202,9 +222,12 @@ class Handler(SimpleHTTPRequestHandler):
     threading.Thread(target=analyze,args=(id,out/'frame.jpg',tag,'quality' if q.get('quality',['0'])[0]=='1' else 'fast256',JOBS[id]['capture_at'],q.get('cracks',['1'])[0]=='1'),daemon=True).start()
    except Exception:LOCK.release();raise
    return self.send({'id':id},status=202)
+  except field_auth.Rejected as e:self.send({'error':str(e)},status=e.status)
+  except psycopg.errors.UniqueViolation:self.send({'error':'Логин уже занят'},status=409)
   except (ValueError,KeyError,Image.UnidentifiedImageError,Image.DecompressionBombError) as e:self.send({'error':str(e)},status=400)
   except Exception as e:self.send({'error':str(e)},status=500)
 def main():
+ field_auth.setup(db,OUT)
  with db() as c:
   c.execute("ALTER TABLE measurements ADD COLUMN IF NOT EXISTS vibration_spectrum jsonb")
   c.execute("CREATE OR REPLACE VIEW v_equipment_latest_measurement AS SELECT e.id AS equipment_id,e.tag,to_jsonb(last_row) AS measurement FROM equipment e LEFT JOIN LATERAL (SELECT m.* FROM measurements m WHERE m.equipment_id=e.id ORDER BY m.measured_at DESC,m.id DESC LIMIT 1) last_row ON true")

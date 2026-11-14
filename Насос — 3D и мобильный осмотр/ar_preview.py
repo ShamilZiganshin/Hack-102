@@ -27,14 +27,14 @@ def preview(handler, body, workers):
             rgb.save(frame)
             with ThreadPoolExecutor(3) as pool:
                 jobs = {k:pool.submit(workers[k].infer,frame,root/(k+'.png'),'preview' if k=='oil' else 'fast256') for k in colors}
-                for job in jobs.values(): job.result()
+                reports = {key: job.result() for key,job in jobs.items()}
             array = np.array(rgb)
             blended = array.copy()
             findings = {}
             for key,color in colors.items():
                 with Image.open(root/(key+'.png')) as image:
                     mask=np.asarray(image)>0
-                findings[key] = {'present': bool(mask.any()), 'percent': round(float(mask.mean()) * 100, 2)}
+                findings[key] = {'present': bool(mask.any()), 'confidence': reports[key].get('confidence'), 'percent': round(float(mask.mean()) * 100, 2)}
                 blended[mask]=array[mask]*.5+np.asarray(color)*.5
             buf=io.BytesIO()
             Image.fromarray(blended).save(buf,'JPEG',quality=87)

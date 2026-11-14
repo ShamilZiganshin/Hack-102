@@ -52,7 +52,7 @@ $('#toggleOriginal').onclick=()=>{original=!original;showResultImage().catch(e=>
 let liveSession=null;
 function endLive(){
  liveSession?.abort();liveSession=null;auto=false;
- $('#gpuOverlay').hidden=true;$('#auto').textContent='Непрерывный осмотр';
+ showFrameFindings(null);$('#insideLive').textContent='Непрерывный осмотр';$('#gpuOverlay').hidden=true;$('#auto').textContent='Непрерывный осмотр';
  $('#auto').setAttribute('aria-pressed','false');
 }
 $('#auto').onclick=async()=>{
@@ -60,7 +60,7 @@ $('#auto').onclick=async()=>{
  if(!tag){status('Сначала сфотографируйте QR насоса или выберите насос из списка.',true);return}
  if(busy)return;
  const session=new AbortController();liveSession=session;auto=true;
- $('#auto').textContent='Остановить осмотр';$('#auto').setAttribute('aria-pressed','true');
+ $('#insideLive').textContent='Остановить осмотр';$('#auto').textContent='Остановить осмотр';$('#auto').setAttribute('aria-pressed','true');
  try{
   if(!stream){
    if(!navigator.mediaDevices?.getUserMedia)throw Error('Для камеры нужен доверенный HTTPS.');
@@ -73,15 +73,17 @@ $('#auto').onclick=async()=>{
   while(!session.signal.aborted){
    if(!$('#video').videoWidth){await sleep(100);continue}
    const t=performance.now();const body=await frame(640);
-   const r=await fetch('/api/ar-frame',{method:'POST',body,signal:session.signal,headers:{'X-Access-Key':access,Accept:'image/jpeg'}});
-   if(r.status===429||r.status>=500){$('#gpuOverlay').hidden=true;status('Ожидание GPU · повтор через секунду');await sleep(1000);continue}
+   const r=await fetch('/api/ar-frame',{method:'POST',body,signal:session.signal,headers:{'X-Access-Key':access,Accept:'application/json'}});
+   if(session.signal.aborted)return;
+   if(r.status===429||r.status>=500){showFrameFindings(null,'Ожидание GPU…');$('#gpuOverlay').hidden=true;status('Ожидание GPU · повтор через секунду');await sleep(1000);continue}
    if(!r.ok){if(r.status===401)$('#access').hidden=false;throw Error((await r.json()).error||'Ошибка обработки кадра')}
-   const url=URL.createObjectURL(await r.blob());
+   const packet=(r.headers.get('content-type')||'').includes('json')?await r.json():null;
+   const url=packet?'data:image/jpeg;base64,'+packet.image:URL.createObjectURL(await r.blob());
    try{
     const img=new Image();img.src=url;await img.decode();
     if(session.signal.aborted)return;
-    const c=$('#gpuOverlay');c.width=img.width;c.height=img.height;c.getContext('2d').drawImage(img,0,0);c.hidden=false;
-   }finally{URL.revokeObjectURL(url)}
+    const c=$('#gpuOverlay');c.width=img.width;c.height=img.height;c.getContext('2d').drawImage(img,0,0);c.hidden=false;showFrameFindings(packet?.findings,'Сервер передал только маску');
+   }finally{if(!packet)URL.revokeObjectURL(url)}
    status(tag+' · непрерывный осмотр · '+((performance.now()-t)/1000).toFixed(2)+' с/кадр');
   }
  }catch(e){if(liveSession===session){stopCamera();status(e.message,true)}}

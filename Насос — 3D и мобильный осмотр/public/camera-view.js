@@ -32,3 +32,28 @@ function cameraReadings(data){
   row.textContent='ALERT · '+alert.label+' '+(alert.direction==='ниже'?'↓':'↑')+' '+alert.value+' '+alert.unit+' · '+(actions[alert.label]||alert.advice);panel.append(row);
  }
 }
+
+document.querySelector('#insideLive').onclick=()=>document.querySelector('#auto').click();
+function showFrameFindings(findings,message=''){
+ const panel=document.querySelector('#cameraFindings');
+ panel.replaceChildren();panel.hidden=!findings&&!message;
+ if(!findings){panel.textContent=message;return}
+ const names={rust:'Ржавчина',oil:'Масло',crack:'Трещина'};
+ for(const [key,name] of Object.entries(names)){
+  const result=findings[key],row=document.createElement('span');
+  row.className='finding '+(result?.present?key:'');
+  if(!result){row.textContent=name+' · нет данных'}
+  else if(!result.present){row.textContent=name+' · не выявлено'}
+  else {
+   const pct=result.confidence;
+   row.textContent=name+' · '+(Number.isFinite(pct)?pct.toLocaleString('ru-RU',{maximumFractionDigits:1})+'%':'выявлено');
+   if(!Number.isFinite(pct))row.title='Сервер не передал оценку уверенности';
+  }
+  panel.append(row);
+ }
+ if(Object.values(findings).some(x=>x?.present)){
+  const hint=document.createElement('small');
+  hint.textContent=Object.values(findings).some(x=>Number.isFinite(x?.confidence))?'Оценка модели: средняя по маске; трещины — максимум YOLO.':'Сервер не передал уверенность.';
+  panel.append(hint);
+ }
+}

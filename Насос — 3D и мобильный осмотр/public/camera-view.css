@@ -1,7 +1,16 @@
 .camera.card .view{height:clamp(360px,65vh,850px);height:clamp(360px,65svh,850px)}
 #fullCamera{position:absolute;z-index:4;right:max(10px,env(safe-area-inset-right));top:max(10px,env(safe-area-inset-top));background:#153b3deb;color:white;font:600 13px system-ui;padding:10px;border:1px solid #8ac2ba;border-radius:8px}
-#cameraReadings{position:absolute;z-index:3;bottom:max(8px,env(safe-area-inset-bottom));left:8px;max-width:calc(100% - 16px);padding:6px 9px;background:#0d252bea;color:white;border-radius:6px;font:500 12px/1.35 system-ui;font-variant-numeric:tabular-nums;pointer-events:none}
+#cameraPanel{position:absolute;z-index:3;bottom:max(8px,env(safe-area-inset-bottom));left:8px;max-width:calc(100% - 16px);padding:6px 9px;background:#0d252bea;color:white;border-radius:6px;font:500 12px/1.35 system-ui;font-variant-numeric:tabular-nums;max-height:42%;overflow:auto;overscroll-behavior:contain}
 .miniAlert{color:#ffcb91}
 .camera.card .view:fullscreen,.camera.card .view.expanded{position:fixed;inset:0;width:100%;height:100%;height:100dvh;max-height:none;background:#0d2024;z-index:1000}
 body.cameraExpanded{overflow:hidden}
 @media(max-height:500px){.camera.card .view{height:70svh}}
+
+#cameraPanel{right:8px;width:fit-content}
+#cameraPanel:has(#cameraReadings[hidden]):has(#cameraFindings[hidden]){display:none}
+#cameraFindings:not([hidden]){display:flex;flex-wrap:wrap;gap:3px 10px}
+.finding{color:#ccdbd9}.finding.rust{color:#ffa276}.finding.oil{color:#64e3df}.finding.crack{color:#ff94cd}
+#insideLive{display:none}
+body.cameraExpanded #insideLive{display:block;position:absolute;z-index:4;top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));max-width:55%;background:#153b3deb;color:white;padding:10px;font-size:13px}
+body.cameraExpanded #liveBadge{display:none}
+body.cameraExpanded .camera.card .view video,body.cameraExpanded #gpuOverlay{object-fit:contain}

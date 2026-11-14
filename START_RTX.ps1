@@ -6,6 +6,16 @@ if(!(Test-Path $py)){throw 'Extract this update into the existing Kiber102-Windo
 $env:PUMP_DEVICE='cuda'
 & $py -c "import torch; print(torch.cuda.get_device_name()); print(torch.ones(1,device='cuda').cpu())"
 if($LASTEXITCODE){throw 'CUDA unavailable'}
+$gpy=Join-Path $PSScriptRoot '.venv-gauge/Scripts/python.exe'
+if(!(Test-Path $gpy)){
+ & $py -m venv (Join-Path $PSScriptRoot '.venv-gauge')
+ if($LASTEXITCODE){throw 'Cannot create gauge environment'}
+}
+& $gpy -c "import openvino,cv2,numpy; from importlib.metadata import version; assert version('openvino')=='2026.4.1' and numpy.__version__=='2.4.6' and version('opencv-python-headless')=='5.0.0.93'"
+if($LASTEXITCODE){
+ & $gpy -m pip install -r (Join-Path $app 'gauge/requirements.txt')
+ if($LASTEXITCODE){throw 'Gauge dependency installation failed'}
+}
 Push-Location $app
 try {
  function Check-Database([switch]$Quiet) {

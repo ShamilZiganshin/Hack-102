@@ -73,7 +73,8 @@ $('#auto').onclick=async()=>{
   while(!session.signal.aborted){
    if(!$('#video').videoWidth){await sleep(100);continue}
    const t=performance.now();const body=await frame(640);
-   const r=await fetch('/api/ar-frame',{method:'POST',body,signal:session.signal,headers:{'X-Access-Key':access,Accept:'application/json'}});
+   const gaugeMode=$('#gaugeMode').checked;
+   const r=await fetch(gaugeMode?'/api/ar-frame?mode=gauge':'/api/ar-frame',{method:'POST',body,signal:session.signal,headers:{'X-Access-Key':access,Accept:'application/json'}});
    if(session.signal.aborted)return;
    if(r.status===429||r.status>=500){showFrameFindings(null,'Ожидание GPU…');$('#gpuOverlay').hidden=true;status('Ожидание GPU · повтор через секунду');await sleep(1000);continue}
    if(!r.ok){if(r.status===401)$('#access').hidden=false;throw Error((await r.json()).error||'Ошибка обработки кадра')}
@@ -82,7 +83,13 @@ $('#auto').onclick=async()=>{
    try{
     const img=new Image();img.src=url;await img.decode();
     if(session.signal.aborted)return;
-    const c=$('#gpuOverlay');c.width=img.width;c.height=img.height;c.getContext('2d').drawImage(img,0,0);c.hidden=false;showFrameFindings(packet?.findings,'Сервер передал только маску');
+    const c=$('#gpuOverlay');c.width=img.width;c.height=img.height;c.getContext('2d').drawImage(img,0,0);c.hidden=false;if(gaugeMode){
+     const rows=packet?.gauges||[];
+     const label=rows.length===1&&rows[0].status==='read'
+       ? 'Манометр · '+Number(rows[0].reading).toLocaleString('ru-RU')+' кПа'
+       : rows.length?'Манометр · требуется проверка':'Манометр не найден · поднесите камеру ближе';
+     showFrameFindings(null,label);
+    }else showFrameFindings(packet?.findings,'Сервер передал только маску');
    }finally{if(!packet)URL.revokeObjectURL(url)}
    status(tag+' · непрерывный осмотр · '+((performance.now()-t)/1000).toFixed(2)+' с/кадр');
   }

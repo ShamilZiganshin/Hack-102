@@ -1,0 +1,16 @@
+{
+  "json_schema_version": "2.2.0",
+  "input_preproc": [],
+  "output_postproc": [
+    {
+      "converter": "boxes_labels",
+      "labels": [
+        "gas-pipelines",
+        "deformation",
+        "corrosion",
+        "coating degradation",
+        "deformations"
+      ]
+    }
+  ]
+}

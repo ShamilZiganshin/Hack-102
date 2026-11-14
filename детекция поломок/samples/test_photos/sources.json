@@ -1,0 +1,143 @@
+[
+  {
+    "id": "e01",
+    "title": "Разрушенная коррозией труба",
+    "kind": "defect",
+    "purpose": "Проверить выделение открытого повреждения металла.",
+    "source_page": "https://www.lbrk.de/schadensursachen/korrosion",
+    "image_url": "https://www.lbrk.de/templates/yootheme/cache/2013-02-21-479-1fd1c2d0.jpeg",
+    "author": "См. страницу источника",
+    "license": "Лицензия не указана; источник сохранён. Локальный исследовательский тест.",
+    "size": [
+      1000,
+      1000
+    ],
+    "note": "No expert masks; examples selected before inference. Training-set overlap unknown."
+  },
+  {
+    "id": "e02",
+    "title": "Повреждение изоляции NASA",
+    "kind": "defect",
+    "purpose": "Открытая/повреждённая наружная изоляция; не утверждать разрыв самой трубы.",
+    "source_page": "https://commons.wikimedia.org/wiki/File:DAMAGED_FOAM_INSULATION_ON_LIQUID_NITROGEN_LN2_PIPING_ON_ROOF_-_NARA_-_17446109.jpg",
+    "image_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/93/DAMAGED_FOAM_INSULATION_ON_LIQUID_NITROGEN_LN2_PIPING_ON_ROOF_-_NARA_-_17446109.jpg/1920px-DAMAGED_FOAM_INSULATION_ON_LIQUID_NITROGEN_LN2_PIPING_ON_ROOF_-_NARA_-_17446109.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "author": "Unknown authorUnknown author or not provided",
+    "license": "Public domain",
+    "size": [
+      1600,
+      1257
+    ],
+    "note": "No expert masks; examples selected before inference. Training-set overlap unknown."
+  },
+  {
+    "id": "e03",
+    "title": "Открытая минеральная вата",
+    "kind": "defect",
+    "purpose": "Проверить повреждение обшивки и открытые волокна.",
+    "source_page": "https://www.inuma.net/footer/gebaeude-schadstoffe/kmf/",
+    "image_url": "https://www.inuma.net/fileadmin/_processed_/csm_kmf3_rohr_f235a25728.jpg",
+    "author": "См. страницу источника",
+    "license": "Лицензия не указана; источник сохранён. Локальный исследовательский тест.",
+    "size": [
+      686,
+      600
+    ],
+    "note": "No expert masks; examples selected before inference. Training-set overlap unknown."
+  },
+  {
+    "id": "e04",
+    "title": "Сварные стыки нержавеющих труб",
+    "kind": "control",
+    "purpose": "Контроль: шов не следует автоматически считать трещиной. Исправность не подтверждена.",
+    "source_page": "https://commons.wikimedia.org/wiki/File:Stainless_pipe_weld_joints.jpg",
+    "image_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/44/Stainless_pipe_weld_joints.jpg/1280px-Stainless_pipe_weld_joints.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "author": "Flattrackers and Caferacers Parts and bikebuilds",
+    "license": "CC BY-SA 2.0",
+    "size": [
+      1280,
+      960
+    ],
+    "note": "No expert masks; examples selected before inference. Training-set overlap unknown."
+  },
+  {
+    "id": "e05",
+    "title": "Шов трубы перед обмоткой",
+    "kind": "control",
+    "purpose": "Контроль ложных тревог на штатном сварном соединении; не экспертное подтверждение исправности.",
+    "source_page": "https://commons.wikimedia.org/wiki/File:Pipe_weld_before_protective_wrapping_-_geograph.org.uk_-_7203352.jpg",
+    "image_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3d/Pipe_weld_before_protective_wrapping_-_geograph.org.uk_-_7203352.jpg/1280px-Pipe_weld_before_protective_wrapping_-_geograph.org.uk_-_7203352.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "author": "Peter Facey",
+    "license": "CC BY-SA 2.0",
+    "size": [
+      1280,
+      853
+    ],
+    "note": "No expert masks; examples selected before inference. Training-set overlap unknown."
+  },
+  {
+    "id": "e06",
+    "title": "Ржавая труба в Duisburg",
+    "kind": "control",
+    "purpose": "Контроль: коррозия сама по себе не означает наличие видимого разрыва.",
+    "source_page": "https://commons.wikimedia.org/wiki/File:Duisburg,_Landschaftspark_Duisburg-Nord_--_2020_--_7780.jpg",
+    "image_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f9/Duisburg%2C_Landschaftspark_Duisburg-Nord_--_2020_--_7780.jpg/1920px-Duisburg%2C_Landschaftspark_Duisburg-Nord_--_2020_--_7780.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "author": "Dietmar Rabich",
+    "license": "CC BY-SA 4.0",
+    "size": [
+      1067,
+      1600
+    ],
+    "note": "No expert masks; examples selected before inference. Training-set overlap unknown."
+  },
+  {
+    "id": "e07",
+    "title": "Резервуары в изготовлении",
+    "kind": "control",
+    "purpose": "Контроль геометрии и сварных швов. Полное состояние оборудования по фото неизвестно.",
+    "source_page": "https://commons.wikimedia.org/wiki/File:Pressure_tanks_under_construction.jpg",
+    "image_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e8/Pressure_tanks_under_construction.jpg/1920px-Pressure_tanks_under_construction.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "author": "W.carter",
+    "license": "CC0",
+    "size": [
+      1600,
+      1200
+    ],
+    "note": "No expert masks; examples selected before inference. Training-set overlap unknown."
+  },
+  {
+    "id": "e08",
+    "title": "Сломанная металлическая деталь",
+    "kind": "defect",
+    "purpose": "Видимый излом детали; другой тип объекта для проверки переноса.",
+    "source_page": "https://commons.wikimedia.org/wiki/File:Pedalarm_Bruch.jpg",
+    "image_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/96/Pedalarm_Bruch.jpg/1280px-Pedalarm_Bruch.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "author": "Lokilech",
+    "license": "CC BY-SA 3.0",
+    "size": [
+      1280,
+      1177
+    ],
+    "note": "No expert masks; examples selected before inference. Training-set overlap unknown."
+  },
+  {
+    "id": "e09",
+    "title": "Сегментированная изоляция",
+    "kind": "control",
+    "purpose": "Контроль: технологические надрезы и стыки изоляции не равны аварийной трещине металла.",
+    "source_page": "https://commons.wikimedia.org/wiki/File:Calcium_silicate_pipe_covering,_scored_block_sheets.png",
+    "image_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/39/Calcium_silicate_pipe_covering%2C_scored_block_sheets.png/1920px-Calcium_silicate_pipe_covering%2C_scored_block_sheets.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "author": "Achim Hering",
+    "license": "CC BY 3.0",
+    "size": [
+      1600,
+      931
+    ],
+    "note": "No expert masks; examples selected before inference. Training-set overlap unknown."
+  },
+  {
+    "id": "e10",
+    "title": "Усталостное разрушение металла",
+    "error": "Download failed",
+    "source_page": "https://norman-williamson.co.uk/metal_fatigue.htm"
+  }
+]

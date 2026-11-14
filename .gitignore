@@ -1,0 +1,12 @@
+**/.venv/
+**/__pycache__/
+**/.cache/
+**/.runtime/
+**/private/
+**/models/blobs/
+**/models/manifests/
+**/Подключить телефон.html
+**/kiber102-ca.cer
+*.log
+*.pid
+.setup.lock

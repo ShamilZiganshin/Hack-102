@@ -1,0 +1,106 @@
+[
+  {
+    "id": "external_schaeff",
+    "title": "Гидронасос Schaeff",
+    "file": "external_schaeff.jpg",
+    "source": "https://www.bauforum24.biz/forums/topic/76725-schaeff-hml30e-verstellpumpe-undicht/",
+    "image_url": "https://www.bauforum24.biz/uploads/monthly_2025_04/shaeff_hml30_pumpe.jpg.6d865c230df6ea5edc3181fd99ff198d.jpg",
+    "evaluation": "external demonstration; no ground truth; training independence unknown"
+  },
+  {
+    "id": "external_renault",
+    "title": "Насос Renault",
+    "file": "external_renault.jpg",
+    "source": "https://atr-agri.superforum.fr/t15737-fuite-d-huile-sous-pompe-hydraulique-super-3-d",
+    "image_url": "https://i.servimg.com/u/f48/15/02/02/12/p1150017.jpg",
+    "evaluation": "external demonstration; no ground truth; training independence unknown"
+  },
+  {
+    "id": "external_bm350",
+    "title": "Насос BM 350",
+    "file": "external_bm350.jpg",
+    "source": "https://www.maskinisten.net/viewtopic.php?t=279359",
+    "image_url": "https://www.maskinisten.net/userpix/352217_MB1HOJ8NU68Z1460290651.jpg",
+    "evaluation": "external demonstration; no ground truth; training independence unknown"
+  },
+  {
+    "id": "external_ford",
+    "title": "Насос Ford",
+    "file": "external_ford.jpg",
+    "source": "https://www.tractorbynet.com/forums/threads/ford-4000-started-spewing-fluid.235353/",
+    "image_url": "https://www.tractorbynet.com/forums/attachments/blowout1-jpg.253225/",
+    "evaluation": "external demonstration; no ground truth; training independence unknown"
+  },
+  {
+    "id": "external_ford2000",
+    "title": "Насос Ford 2000",
+    "file": "external_ford2000.jpg",
+    "source": "https://vieilles-soupapes.1fr1.net/t63043-sifflement-pompe-hydraulique-ford-2000",
+    "image_url": "https://i.servimg.com/u/f51/20/45/63/35/20221013.jpg",
+    "evaluation": "external demonstration; no ground truth; training independence unknown"
+  },
+  {
+    "id": "external_kubota",
+    "title": "Соединение гидроцилиндра Kubota",
+    "file": "external_kubota.jpg",
+    "source": "https://www.tractorbynet.com/forums/threads/kubota-leaky-fitting-anyone-familiar-with-this-one.456252/",
+    "image_url": "",
+    "evaluation": "external demonstration; no ground truth; training independence unknown"
+  },
+  {
+    "id": "external_t25",
+    "title": "Насос Т-25",
+    "file": "external_t25.jpg",
+    "source": "https://www.agrofoto.pl/forum/topic/275182-wladymirec-t25-wyrzuca-olej-pompa-przy-podnoszeniu-jedna-sekcja/",
+    "image_url": "https://static.agrofoto.pl/monthly_2019_04/56615085_2163039277075334_1038633210839302144_n.jpg.c601a7fbf975d39dda1ce52c868e4c2c.jpg",
+    "evaluation": "external demonstration; no ground truth; training independence unknown"
+  },
+  {
+    "id": "external_akerman",
+    "title": "Гидронасос Akerman",
+    "file": "external_akerman.jpg",
+    "source": "https://www.maskinisten.net/viewtopic.php?t=323484",
+    "image_url": "https://www.maskinisten.net/userpix/368977_WQYEQRQ5BIQO1588880836.jpg",
+    "evaluation": "external demonstration; no ground truth; training independence unknown"
+  },
+  {
+    "id": "external_cylinder",
+    "title": "Гидроцилиндр",
+    "file": "external_cylinder.jpg",
+    "source": "https://www.shaken.jp/repair-hydraulic-cylinder-katojidoshahanbai.html",
+    "image_url": "https://www.shaken.jp/images/bandoshi-katojidoshahanbai-oil-hydraulic-cylinder-malfunction.jpg",
+    "evaluation": "external demonstration; no ground truth; training independence unknown"
+  },
+  {
+    "id": "external_transmission",
+    "title": "Корпус трансмиссии",
+    "file": "external_transmission.jpg",
+    "source": "https://forum-auto.caradisiac.com/topic/463092-free1-fuite-arbre-transmission-av-gauche-et-boite-auto/",
+    "image_url": "https://media-eu.invisioncic.com/m304542/monthly_2020_11/1046088064_fuitearbreAVgauche2.jpg.3e2a052f02e440f862ac4622bc0efa59.jpg",
+    "evaluation": "external demonstration; no ground truth; training independence unknown"
+  },
+  {
+    "id": "vehicle_pump",
+    "title": "Гидронасос специального автомобиля",
+    "file": "vehicle_pump.jpg",
+    "source": "https://www.shaken.jp/repair-hydraulic-pump-katojidoshahanbai.html",
+    "image_url": "https://www.shaken.jp/images/repair-hydraulic-pump-katojidoshahanbai.jpg",
+    "evaluation": "external demonstration; no ground truth; training independence unknown"
+  },
+  {
+    "id": "tractor_pump",
+    "title": "Гидронасос трактора: следы масла",
+    "file": "tractor_pump.jpg",
+    "source": "https://atr-agri.superforum.fr/t15737-fuite-d-huile-sous-pompe-hydraulique-super-3-d",
+    "image_url": "https://i.servimg.com/u/f48/15/02/02/12/p1150017.jpg",
+    "evaluation": "external demonstration; no ground truth; training independence unknown"
+  },
+  {
+    "id": "excavator_pump",
+    "title": "Гидронасос Schaeff HML30e",
+    "file": "excavator_pump.jpg",
+    "source": "https://www.bauforum24.biz/forums/topic/76725-schaeff-hml30e-verstellpumpe-undicht/",
+    "image_url": "https://www.bauforum24.biz/uploads/monthly_2025_04/shaeff_hml30_pumpe.jpg.6d865c230df6ea5edc3181fd99ff198d.jpg",
+    "evaluation": "external demonstration; no ground truth; training independence unknown"
+  }
+]

@@ -41,7 +41,25 @@ $('#shot').onclick=async()=>{if(busy)return;if(!tag){status('Сначала вы
 
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
-async function inspect(blob){if(busy)return;busy=true;const captured=new Date().toISOString(),requestTag=tag;$('#shot').disabled=true;status('Отправляем кадр: ржавчина, масло и трещины. Вычисления на компьютере…');try{const {id}=await json('/api/analyze?tag='+encodeURIComponent(tag)+'&quality='+($('#quality').checked?'1':'0')+'&cracks=1',{method:'POST',body:blob,headers:{'X-Captured-At':captured}});let r,started=Date.now();do{await sleep(700);r=await json('/api/jobs/'+id);status((r.stage==='crack_yolo'?'Ржавчина и масло готовы. Трещины: YOLO · '+(r.crack_progress?.status||'запуск')+' · ':'Сервер обрабатывает зафиксированный кадр · ')+((Date.now()-started)/1000).toFixed(0)+' с');if(Date.now()-started>1500000)throw Error('Обработка превысила 25 минут. Проверьте сервер.')}while(!['done','error'].includes(r.status));if(r.status==='error')throw Error(r.error);if(requestTag===tag){await renderResult(r);await historyList();status('Готово за '+r.seconds+' с. Осмотр сохранён в БД.'+(auto?' Следующий кадр снимается после обработки.':''))}}catch(e){status(e.message,true);auto=false;$('#auto').textContent='Непрерывный осмотр'}finally{busy=false;$('#shot').disabled=false}}
+function bodyLabel(state){
+ return ({intact:'Конструкция в порядке · внешний осмотр',broken:'Повреждение конструкции · корпус привода'})[state]||'Ракурс не распознан';
+}
+for(const [current,other] of [['bodyMode','gaugeMode'],['gaugeMode','bodyMode']]){
+ $('#'+current).onchange=()=>{if($('#'+current).checked)$('#'+other).checked=false;showFrameFindings(null);$('#gpuOverlay').hidden=true;};
+}
+async function inspect(blob){if(busy)return;
+ if($('#bodyMode').checked){
+  busy=true;const requestTag=tag;
+  try{
+   const packet=await json('/api/ar-frame?mode=body',{method:'POST',body:blob});
+   const img=new Image();img.src='data:image/jpeg;base64,'+packet.image;await img.decode();
+   if(tag!==requestTag||!$('#bodyMode').checked)return;
+   const c=$('#gpuOverlay');c.width=img.width;c.height=img.height;c.getContext('2d').drawImage(img,0,0);c.hidden=false;
+   $('#cameraPlaceholder').hidden=true;showFrameFindings(null,bodyLabel(packet.structure));status(bodyLabel(packet.structure));
+  }catch(e){status(e.message,true)}finally{busy=false}
+  return;
+ }
+busy=true;const captured=new Date().toISOString(),requestTag=tag;$('#shot').disabled=true;status('Отправляем кадр: ржавчина, масло и трещины. Вычисления на компьютере…');try{const {id}=await json('/api/analyze?tag='+encodeURIComponent(tag)+'&quality='+($('#quality').checked?'1':'0')+'&cracks=1',{method:'POST',body:blob,headers:{'X-Captured-At':captured}});let r,started=Date.now();do{await sleep(700);r=await json('/api/jobs/'+id);status((r.stage==='crack_yolo'?'Ржавчина и масло готовы. Трещины: YOLO · '+(r.crack_progress?.status||'запуск')+' · ':'Сервер обрабатывает зафиксированный кадр · ')+((Date.now()-started)/1000).toFixed(0)+' с');if(Date.now()-started>1500000)throw Error('Обработка превысила 25 минут. Проверьте сервер.')}while(!['done','error'].includes(r.status));if(r.status==='error')throw Error(r.error);if(requestTag===tag){await renderResult(r);await historyList();status('Готово за '+r.seconds+' с. Осмотр сохранён в БД.'+(auto?' Следующий кадр снимается после обработки.':''))}}catch(e){status(e.message,true);auto=false;$('#auto').textContent='Непрерывный осмотр'}finally{busy=false;$('#shot').disabled=false}}
 
 let imageUrl=null;async function showResultImage(){if(!selectedResult)return;const blob=await(await api(original?selectedResult.original:selectedResult.overlay)).blob();if(imageUrl)URL.revokeObjectURL(imageUrl);imageUrl=URL.createObjectURL(blob);$('#overlay').src=imageUrl;$('#toggleOriginal').textContent=original?'Показать маски':'Показать оригинал'}
 
@@ -73,8 +91,8 @@ $('#auto').onclick=async()=>{
   while(!session.signal.aborted){
    if(!$('#video').videoWidth){await sleep(100);continue}
    const t=performance.now();const body=await frame(640);
-   const gaugeMode=$('#gaugeMode').checked;
-   const r=await fetch(gaugeMode?'/api/ar-frame?mode=gauge':'/api/ar-frame',{method:'POST',body,signal:session.signal,headers:{'X-Access-Key':access,Accept:'application/json'}});
+   const gaugeMode=$('#gaugeMode').checked, bodyMode=$('#bodyMode').checked;
+   const r=await fetch(bodyMode?'/api/ar-frame?mode=body':gaugeMode?'/api/ar-frame?mode=gauge':'/api/ar-frame',{method:'POST',body,signal:session.signal,headers:{'X-Access-Key':access,Accept:'application/json'}});
    if(session.signal.aborted)return;
    if(r.status===429||r.status>=500){showFrameFindings(null,'Ожидание GPU…');$('#gpuOverlay').hidden=true;status('Ожидание GPU · повтор через секунду');await sleep(1000);continue}
    if(!r.ok){if(r.status===401)$('#access').hidden=false;throw Error((await r.json()).error||'Ошибка обработки кадра')}
@@ -83,7 +101,7 @@ $('#auto').onclick=async()=>{
    try{
     const img=new Image();img.src=url;await img.decode();
     if(session.signal.aborted)return;
-    const c=$('#gpuOverlay');c.width=img.width;c.height=img.height;c.getContext('2d').drawImage(img,0,0);c.hidden=false;if(gaugeMode){
+    const c=$('#gpuOverlay');c.width=img.width;c.height=img.height;c.getContext('2d').drawImage(img,0,0);c.hidden=false;if(bodyMode){showFrameFindings(null,bodyLabel(packet?.structure))}else if(gaugeMode){
      const rows=packet?.gauges||[];
      const label=rows.length===1&&rows[0].status==='read'
        ? 'Манометр · '+Number(rows[0].reading).toLocaleString('ru-RU')+' кПа'

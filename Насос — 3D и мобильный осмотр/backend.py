@@ -173,6 +173,9 @@ class Handler(SimpleHTTPRequestHandler):
     with db() as c:
      r=c.execute('INSERT INTO measurements(equipment_id,measured_at,temperature_c,vibration_mm_s,pressure_out_bar,current_a,operating_hours,data_origin,vibration_spectrum) SELECT id,%s,%s,%s,%s,%s,%s,%s,%s FROM equipment WHERE tag=%s RETURNING id',(stamp,*vals,'sensor_api',Jsonb(spectrum),tag)).fetchone()
     return self.send(r or {'error':'Насос не найден'},status=201 if r else 404)
+   if u.path=='/api/ar-frame' and q.get('mode')==['body']:
+    from body_preview import preview_body
+    return preview_body(self,body)
    if u.path=='/api/ar-frame' and q.get('mode')==['gauge']:
     from gauge_preview import preview_gauge
     return preview_gauge(self,body)

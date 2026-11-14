@@ -14,18 +14,18 @@ class RustSegmenter:
         sd=load_file(str(ROOT/'models/ostrava_unetpp_resnet50.safetensors'))
         self.model=smp.UnetPlusPlus(encoder_name='resnet50',encoder_weights=None,classes=1)
         self.model.load_state_dict({k[6:]:v for k,v in sd.items() if k.startswith('model.')},strict=True)
-        self.model.eval();self.mean=sd['mean'];self.std=sd['std']
+        self.device=os.environ.get('PUMP_DEVICE','cpu');self.model.to(self.device).eval();self.mean=sd['mean'].to(self.device);self.std=sd['std'].to(self.device)
     @torch.inference_mode()
     def raw(self,rgb,size=256,flip=False):
         a=cv2.resize(rgb,(size,size),interpolation=cv2.INTER_NEAREST)
         x=torch.from_numpy(a.transpose(2,0,1).copy()).float()[None]
         # Deliberately retain 0..255: this checkpoint was TRAINED with ToTensorV2
         # on uint8 arrays and (image - ImageNet mean) / ImageNet std, without /255.
-        x=(x-self.mean)/self.std
+        x=(x.to(self.device)-self.mean)/self.std
         if flip:x=torch.flip(x,[-1])
         p=self.model(x).sigmoid()
         if flip:p=torch.flip(p,[-1])
-        return p[0,0].numpy()
+        return p[0,0].cpu().numpy()
     def predict(self,rgb,mode='quality'):
         config=json.loads((ROOT/'config.json').read_text()) if (ROOT/'config.json').exists() else {}
         mode=config.get('quality_mode','tta256') if mode=='quality' else mode

@@ -22,7 +22,7 @@ class OilDetector:
   self.yolo.model.names={int(k):v for k,v in meta['names'].items()}
  def predict(self,rgb,imgsz=960):
   t=time.perf_counter()
-  result=self.yolo.predict(source=cv2.cvtColor(rgb,cv2.COLOR_RGB2BGR),conf=.05,imgsz=imgsz,device='cpu',verbose=False,retina_masks=True,save=False,max_det=40)[0]
+  result=self.yolo.predict(source=cv2.cvtColor(rgb,cv2.COLOR_RGB2BGR),conf=.05,imgsz=imgsz,device=os.environ.get('PUMP_DEVICE','cpu'),verbose=False,retina_masks=True,save=False,max_det=40)[0]
   masks=[];detections=[]
   if result.masks is not None:
    for index,(box,mask) in enumerate(zip(result.boxes,result.masks.data.cpu().numpy())):

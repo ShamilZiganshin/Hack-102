@@ -8,26 +8,33 @@ import sys
 
 ROOT = Path(__file__).resolve().parent
 APP = ROOT / "Насос — 3D и мобильный осмотр"
-PG = Path(os.environ["ProgramFiles"]) / "PostgreSQL/18/bin"
+version_file = APP / "private/postgres/PG_VERSION"
+pg_versions = [version_file.read_text().strip()] if version_file.exists() else ["17","18"]
+pg_base = Path(os.environ["ProgramFiles"]) / "PostgreSQL"
+PG = next((pg_base/v/"bin" for v in pg_versions if (pg_base/v/"bin/initdb.exe").exists()), pg_base/pg_versions[0]/"bin")
 
 
 def run(*args, **kwargs):
     subprocess.run(list(map(str, args)), check=True, **kwargs)
 
 
-def environment(name):
-    folder = ROOT / name
-    env = folder / ".venv"
+def environment():
+    env = ROOT / ".venv"
     python = env / "Scripts/python.exe"
-    lock = folder / "requirements-lock.txt"
+    mode = "cpu" if "--cpu" in sys.argv else "cu128"
+    lock = ROOT / "requirements.txt"
     marker = env / "installed.sha256"
-    digest = hashlib.sha256(lock.read_bytes()).hexdigest()
+    digest = hashlib.sha256(lock.read_bytes() + mode.encode()).hexdigest()
     if not python.exists():
         run(sys.executable, "-m", "venv", env)
     if not marker.exists() or marker.read_text() != digest:
-        run(python, "-m", "pip", "install", "--extra-index-url",
-            "https://download.pytorch.org/whl/cpu", "-r", lock)
+        run(python, "-m", "pip", "install", "torch==2.11.0", "torchvision==0.26.0",
+            "--index-url", "https://download.pytorch.org/whl/" + mode)
+        run(python, "-m", "pip", "install", "-r", lock)
         marker.write_text(digest)
+    os.environ["PUMP_DEVICE"] = "cpu" if mode == "cpu" else "cuda"
+    if mode != "cpu":
+        run(python, "-c", "import torch; print(torch.cuda.get_device_name()); print(torch.ones(1, device='cuda').cpu())")
     return python
 
 
@@ -70,18 +77,17 @@ def database(python):
 
 def main():
     if not (PG / "initdb.exe").is_file():
-        sys.exit("Установите PostgreSQL 18 для Windows (см. README.md).")
-    run("git", "lfs", "pull", cwd=ROOT)
+        sys.exit("Установите PostgreSQL 17 или 18 для Windows (см. README.md).")
+    if (ROOT / ".git").exists():
+        run("git", "lfs", "pull", cwd=ROOT)
     for folder in ROOT.iterdir():
         if folder.is_dir() and ((folder / "START.bat").exists() or folder.name.startswith("детекция")):
             (folder / "outputs").mkdir(exist_ok=True)
     with environment_lock():
-        python = environment("детекция масла")
-        environment("детекция ржавчины")
-        environment("детекция поломок")
+        python = environment()
         database(python)
-        run(python, APP / "setup.py")
-        run(python, APP / "launch.py")
+        (ROOT / "детекция поломок/outputs").mkdir(exist_ok=True)
+        run("powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ROOT / "START_RTX.ps1")
 
 
 from contextlib import contextmanager

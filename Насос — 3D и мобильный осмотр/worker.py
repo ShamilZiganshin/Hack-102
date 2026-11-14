@@ -10,6 +10,10 @@ with contextlib.redirect_stdout(sys.stderr):
   sys.path.insert(0,str(ROOT.parent/'детекция ржавчины'))
   from rust_model import RustSegmenter
   model=RustSegmenter()
+ elif key=='crack':
+  import os
+  from ultralytics import YOLO
+  model=YOLO(ROOT.parent/'детекция поломок/models/specialists/crack_yolov8n.pt')
  else:
   sys.path.insert(0,str(ROOT.parent/'детекция масла'))
   from surface_model import SurfaceOilModel
@@ -20,8 +24,12 @@ for line in sys.stdin:
   req=json.loads(line);t=time.perf_counter()
   with contextlib.redirect_stdout(sys.stderr):
    rgb=np.array(Image.open(req['image']).convert('RGB'))
-   p=model.predict(rgb,req.get('mode','fast256')) if key=='rust' else model.predict(rgb)['dense_score']
-   mask=p>=.5
+   if key=='crack':
+    prediction=model.predict(rgb[:,:,::-1].copy(),imgsz=640,conf=.25,retina_masks=True,verbose=False,device=os.environ.get('PUMP_DEVICE','cpu'))[0]
+    mask=(prediction.masks.data.amax(0).cpu().numpy()>.5 if prediction.masks is not None else np.zeros(rgb.shape[:2],dtype=bool))
+   else:
+    p=model.predict(rgb,req.get('mode','fast256')) if key=='rust' else model.predict(rgb,imgsz=640 if req.get('mode')=='preview' else 960)['dense_score']
+    mask=p>=.5
    Image.fromarray(mask.astype('uint8')*255).save(req['mask'])
   print(json.dumps({'key':key,'seconds':round(time.perf_counter()-t,3),'percent':round(float(mask.mean()*100),3)}),flush=True)
  except Exception as e: print(json.dumps({'error':str(e)}),flush=True)

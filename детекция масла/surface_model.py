@@ -8,8 +8,8 @@ PROMPTS=['oil stains on machinery','wet oily metal surface','black greasy oil re
 class SurfaceOilModel:
  def __init__(self,hybrid=False):
   from transformers import CLIPSegProcessor,CLIPSegForImageSegmentation
-  self.hybrid=hybrid;torch.set_num_threads(4)
-  self.model=CLIPSegForImageSegmentation.from_pretrained(ROOT/'models/clipseg',local_files_only=True,use_safetensors=True).eval()
+  self.device=os.environ.get('PUMP_DEVICE','cpu');self.hybrid=hybrid;torch.set_num_threads(4)
+  self.model=CLIPSegForImageSegmentation.from_pretrained(ROOT/'models/clipseg',local_files_only=True,use_safetensors=True).to(self.device).eval()
   self.processor=CLIPSegProcessor.from_pretrained(ROOT/'models/clipseg',local_files_only=True,use_fast=False)
   self.detector=None
   if hybrid:
@@ -19,11 +19,11 @@ class SurfaceOilModel:
  def predict(self,rgb,imgsz=960):
   start=time.perf_counter();im=Image.fromarray(rgb)
   x=self.processor(text=PROMPTS,images=[im]*len(PROMPTS),return_tensors='pt',padding=True)
-  maps=self.model(**x).logits.sigmoid().cpu().numpy()
+  maps=self.model(**x.to(self.device)).logits.sigmoid().cpu().numpy()
   semantic=cv2.resize(maps.max(axis=0),(rgb.shape[1],rgb.shape[0]),interpolation=cv2.INTER_LINEAR).astype(np.float32)
   score=semantic.copy();expert=[]
   if self.detector is not None:
-   y=self.detector.predict(rgb,imgsz=960)
+   y=self.detector.predict(rgb,imgsz=imgsz)
    for mask,d in zip(y['instances'],y['detections']):
     if d['confidence']>=.8:score[mask]=np.maximum(score[mask],d['confidence']);expert.append(d)
   return {'model':'hybrid' if self.hybrid else 'clipseg','kind':'semantic','dense_score':score,'semantic_score':semantic,'detections':[],'expert_detections':expert,'prompts':PROMPTS,'seconds':round(time.perf_counter()-start,4),'imgsz':352,'confidence_threshold':.5,'fusion':'pixelwise maximum of CLIPSeg text maps; YOLO26 Nano proposals with confidence >=0.8 are added in hybrid mode','trained_new_weights':False,'warning':'Experimental uncalibrated fusion, not a trained or validated new oil model.'}
